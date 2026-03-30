@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Poll | Teacher Tools</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 0.9rem;
+    }
+    .setup-section {
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+      margin-bottom: 15px;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #4facfe;
+    }
+    textarea {
+      height: 80px;
+      resize: vertical;
+    }
+    .option-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .preset-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .preset-btn {
+      padding: 10px 20px;
+      border: 2px solid #4facfe;
+      background: white;
+      color: #4facfe;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .preset-btn:hover {
+      background: #4facfe;
+      color: white;
+    }
+    .action-btn {
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      display: block;
+      margin: 20px auto;
+    }
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(79, 172, 254, 0.4);
+    }
+    .action-btn.secondary {
+      background: #95a5a6;
+    }
+    .poll-display {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .poll-question {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 30px;
+      line-height: 1.3;
+    }
+    .voting-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .vote-btn {
+      padding: 30px 20px;
+      font-size: 1.3rem;
+      border: 3px solid #4facfe;
+      background: white;
+      color: #4facfe;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .vote-btn:hover {
+      background: #4facfe;
+      color: white;
+      transform: scale(1.05);
+    }
+    .vote-btn.voted {
+      background: #27ae60;
+      border-color: #27ae60;
+      color: white;
+    }
+    .results-section {
+      display: none;
+      margin-top: 30px;
+    }
+    .result-bar {
+      margin-bottom: 15px;
+      background: #ecf0f1;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    .result-fill {
+      height: 50px;
+      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+      color: white;
+      font-weight: 600;
+      transition: width 0.5s ease;
+    }
+    .result-label {
+      font-size: 1.1rem;
+    }
+    .result-count {
+      font-size: 1.2rem;
+    }
+    .total-votes {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #666;
+      margin-top: 20px;
+    }
+    .teacher-controls {
+      display: none;
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    .control-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .hidden-code {
+      font-family: monospace;
+      background: #ecf0f1;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      letter-spacing: 3px;
+    }
+    .mode-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .mode-tab {
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .mode-tab.active {
+      color: #4facfe;
+      border-bottom-color: #4facfe;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.9rem;
+    }
+    .footer a {
+      color: white;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Quick Poll</h1>
+    <p class="subtitle">Instant feedback from your students</p>
+    
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="switchTab('create')">Create Poll</button>
+      <button class="mode-tab" onclick="switchTab('vote')">Vote</button>
+      <button class="mode-tab" onclick="switchTab('results')">Results</button>
+    </div>
+    
+    <!-- Create Poll Tab -->
+    <div id="createTab" class="tab-content active">
+      <div class="setup-section">
+        <label for="pollQuestion">Question:</label>
+        <input type="text" id="pollQuestion" placeholder="e.g., What is the capital of France?">
+        
+        <label>Preset Options:</label>
+        <div class="preset-buttons">
+          <button class="preset-btn" onclick="setPreset('yesno')">Yes / No</button>
+          <button class="preset-btn" onclick="setPreset('abcd')">A / B / C / D</button>
+          <button class="preset-btn" onclick="setPreset('traffic')">🟢 🟡 🔴</button>
+          <button class="preset-btn" onclick="setPreset('agree')">👍 👎 🤷</button>
+        </div>
+        
+        <label>Options (one per line):</label>
+        <div class="option-inputs" id="optionInputs">
+          <input type="text" class="poll-option" placeholder="Option A">
+          <input type="text" class="poll-option" placeholder="Option B">
+          <input type="text" class="poll-option" placeholder="Option C">
+          <input type="text" class="poll-option" placeholder="Option D">
+        </div>
+        
+        <button class="action-btn" onclick="startPoll()">▶️ Start Poll</button>
+      </div>
+    </div>
+    
+    <!-- Vote Tab -->
+    <div id="voteTab" class="tab-content">
+      <div id="voteSection" style="display: none;">
+        <div class="poll-question" id="votingQuestion"></div>
+        <div class="voting-options" id="votingOptions"></div>
+      </div>
+      <div id="noActivePoll" style="text-align: center; padding: 40px; color: #999;">
+        <p>No active poll. Create one in the "Create Poll" tab.</p>
+      </div>
+    </div>
+    
+    <!-- Results Tab -->
+    <div id="resultsTab" class="tab-content">
+      <div class="results-section" id="resultsSection" style="display: block;">
+        <div id="resultsContainer"></div>
+        <div class="total-votes" id="totalVotes">Total votes: 0</div>
+      </div>
+      <button class="action-btn secondary" onclick="resetPoll()">🔄 New Poll</button>
+    </div>
+    
+    <!-- Teacher Controls (always visible when poll is active) -->
+    <div class="teacher-controls" id="teacherControls">
+      <h3>🎛️ Teacher Controls</h3>
+      <div class="control-row">
+        <span>Poll Code:</span>
+        <span class="hidden-code" id="pollCode">----</span>
+      </div>
+      <div class="control-row">
+        <button class="preset-btn" onclick="showResults()">📊 Show Results</button>
+        <button class="preset-btn" onclick="resetVotes()">🗑️ Reset Votes</button>
+        <button class="preset-btn" onclick="copyLink()">📋 Copy Link</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    Made for teachers | <a href="index.html">More Tools</a>
+  </div>
+
+  <script>
+    let pollData = {
+      question: '',
+      options: [],
+      votes: {},
+      active: false,
+      code: ''
+    };
+    
+    let hasVoted = false;
+    
+    function switchTab(tab) {
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tab + 'Tab').classList.add('active');
+      
+      if (tab === 'results') {
+        updateResults();
+      }
+    }
+    
+    function setPreset(type) {
+      const container = document.getElementById('optionInputs');
+      container.innerHTML = '';
+      
+      let options = [];
+      switch(type) {
+        case 'yesno':
+          options = ['Yes', 'No'];
+          break;
+        case 'abcd':
+          options = ['A', 'B', 'C', 'D'];
+          break;
+        case 'traffic':
+          options = ['🟢 I understand', '🟡 I\'m unsure', '🔴 I need help'];
+          break;
+        case 'agree':
+          options = ['👍 Agree', '👎 Disagree', '🤷 Not sure'];
+          break;
+      }
+      
+      options.forEach(opt => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'poll-option';
+        input.value = opt;
+        container.appendChild(input);
+      });
+    }
+    
+    function startPoll() {
+      const question = document.getElementById('pollQuestion').value.trim();
+      if (!question) {
+        alert('Please enter a question!');
+        return;
+      }
+      
+      const optionInputs = document.querySelectorAll('.poll-option');
+      const options = Array.from(optionInputs)
+        .map(input => input.value.trim())
+        .filter(val => val.length > 0);
+      
+      if (options.length < 2) {
+        alert('Please provide at least 2 options!');
+        return;
+      }
+      
+      pollData = {
+        question: question,
+        options: options,
+        votes: {},
+        active: true,
+        code: generateCode()
+      };
+      
+      options.forEach(opt => pollData.votes[opt] = 0);
+      
+      hasVoted = false;
+      
+      // Update UI
+      document.getElementById('votingQuestion').textContent = question;
+      document.getElementById('pollCode').textContent = pollData.code;
+      
+      // Create voting buttons
+      const votingContainer = document.getElementById('votingOptions');
+      votingContainer.innerHTML = '';
+      options.forEach(option => {
+        const btn = document.createElement('button');
+        btn.className = 'vote-btn';
+        btn.textContent = option;
+        btn.onclick = () => castVote(option);
+        votingContainer.appendChild(btn);
+      });
+      
+      document.getElementById('voteSection').style.display = 'block';
+      document.getElementById('noActivePoll').style.display = 'none';
+      document.getElementById('teacherControls').style.display = 'block';
+      
+      // Switch to vote tab
+      document.querySelectorAll('.mode-tab')[1].click();
+      
+      // Save to localStorage
+      localStorage.setItem('activePoll', JSON.stringify(pollData));
+    }
+    
+    function castVote(option) {
+      if (hasVoted) {
+        alert('You have already voted!');
+        return;
+      }
+      
+      pollData.votes[option]++;
+      hasVoted = true;
+      
+      // Mark button as voted
+      event.target.classList.add('voted');
+      event.target.textContent = '✓ ' + option;
+      
+      // Update localStorage
+      localStorage.setItem('activePoll', JSON.stringify(pollData));
+      
+      // Show confirmation
+      setTimeout(() => {
+        alert('Vote recorded! Switch to Results tab to see totals.');
+      }, 300);
+    }
+    
+    function updateResults() {
+      if (!pollData.active) {
+        document.getElementById('resultsContainer').innerHTML = '<p style="text-align: center; color: #999;">No active poll.</p>';
+        document.getElementById('totalVotes').textContent = 'Total votes: 0';
+        return;
+      }
+      
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = '';
+      
+      const totalVotes = Object.values(pollData.votes).reduce((a, b) => a + b, 0);
+      
+      pollData.options.forEach(option => {
+        const votes = pollData.votes[option] || 0;
+        const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
+        
+        const bar = document.createElement('div');
+        bar.className = 'result-bar';
+        bar.innerHTML = `
+          <div class="result-fill" style="width: ${percentage}%; min-width: ${votes > 0 ? '50px' : '0'}">
+            <span class="result-label">${option}</span>
+            <span class="result-count">${votes} (${percentage}%)</span>
+          </div>
+        `;
+        container.appendChild(bar);
+      });
+      
+      document.getElementById('totalVotes').textContent = `Total votes: ${totalVotes}`;
+    }
+    
+    function showResults() {
+      document.querySelectorAll('.mode-tab')[2].click();
+    }
+    
+    function resetVotes() {
+      if (confirm('Reset all votes? This cannot be undone.')) {
+        pollData.options.forEach(opt => pollData.votes[opt] = 0);
+        hasVoted = false;
+        localStorage.setItem('activePoll', JSON.stringify(pollData));
+        
+        // Reset voting buttons
+        document.querySelectorAll('.vote-btn').forEach(btn => {
+          btn.classList.remove('voted');
+          btn.textContent = btn.textContent.replace('✓ ', '');
+        });
+        
+        alert('Votes reset!');
+      }
+    }
+    
+    function resetPoll() {
+      if (confirm('Create a new poll? Current poll will be deleted.')) {
+        pollData = {
+          question: '',
+          options: [],
+          votes: {},
+          active: false,
+          code: ''
+        };
+        hasVoted = false;
+        localStorage.removeItem('activePoll');
+        
+        document.getElementById('pollQuestion').value = '';
+        document.getElementById('voteSection').style.display = 'none';
+        document.getElementById('noActivePoll').style.display = 'block';
+        document.getElementById('teacherControls').style.display = 'none';
+        
+        // Reset to default options
+        setPreset('abcd');
+        
+        document.querySelectorAll('.mode-tab')[0].click();
+      }
+    }
+    
+    function copyLink() {
+      const url = window.location.href + '?poll=' + pollData.code;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copied to clipboard!');
+      });
+    }
+    
+    function generateCode() {
+      return Math.random().toString(36).substring(2, 6).toUpperCase();
+    }
+    
+    // Check for saved poll on load
+    window.onload = function() {
+      const saved = localStorage.getItem('activePoll');
+      if (saved) {
+        pollData = JSON.parse(saved);
+        if (pollData.active) {
+          document.getElementById('pollQuestion').value = pollData.question;
+          document.getElementById('votingQuestion').textContent = pollData.question;
+          document.getElementById('pollCode').textContent = pollData.code;
+          
+          const container = document.getElementById('optionInputs');
+          container.innerHTML = '';
+          pollData.options.forEach(opt => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'poll-option';
+            input.value = opt;
+            container.appendChild(input);
+          });
+          
+          const votingContainer = document.getElementById('votingOptions');
+          votingContainer.innerHTML = '';
+          pollData.options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.className = 'vote-btn';
+            btn.textContent = option;
+            btn.onclick = () => castVote(option);
+            votingContainer.appendChild(btn);
+          });
+          
+          document.getElementById('voteSection').style.display = 'block';
+          document.getElementById('noActivePoll').style.display = 'none';
+          document.getElementById('teacherControls').style.display = 'block';
+        }
+      }
+    };
+  </script>
+</body>
+</html>
