@@ -219,14 +219,109 @@
       transition: all 0.3s ease;
     }
     .mode-tab.active {
-      color: #4facfe;
-      border-bottom-color: #4facfe;
+      color: #2980b9;
+      border-bottom-color: #2980b9;
+      font-weight: 800;
+      font-size: 1.05rem;
+      text-shadow: 0 1px 2px rgba(41, 128, 185, 0.3);
+      transform: translateY(-2px);
+    }
+    .mode-tab {
+      animation: tabPulse 0.3s ease;
+    }
+    @keyframes tabPulse {
+      0% { transform: scale(0.98); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    .mode-tab.active {
+      animation: tabActivate 0.4s ease;
+    }
+    @keyframes tabActivate {
+      0% { transform: translateY(0) scale(0.98); }
+      50% { transform: translateY(-3px) scale(1.03); }
+      100% { transform: translateY(-2px) scale(1); }
+    }
+    .current-step {
+      font-size: 0.75rem;
+      color: #e74c3c;
+      margin-left: 6px;
+      font-weight: 700;
+      animation: stepPulse 2s ease-in-out infinite;
+    }
+    @keyframes stepPulse {
+      0%, 100% { opacity: 0.7; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(3px); }
     }
     .tab-content {
       display: none;
     }
     .tab-content.active {
       display: block;
+    }
+    .poll-confirmation {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 600;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+    .poll-confirmation.show {
+      display: block;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes tabFlash {
+      0%, 100% { background: white; }
+      50% { background: #d4edda; }
+    }
+    .mode-tab.highlight {
+      animation: tabFlash 1s ease 2;
+    }
+    .workflow-guide {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 25px;
+      color: white;
+    }
+    .workflow-title {
+      text-align: center;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+      opacity: 0.9;
+    }
+    .workflow-steps {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .workflow-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.2);
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .workflow-step .icon {
+      font-size: 1.3rem;
+    }
+    .workflow-arrow {
+      font-size: 1.5rem;
+      opacity: 0.8;
     }
     .footer {
       text-align: center;
@@ -246,13 +341,32 @@
     <p class="subtitle">Instant feedback from your students</p>
     
     <div class="mode-tabs">
-      <button class="mode-tab active" onclick="switchTab('create')">Create Poll</button>
-      <button class="mode-tab" onclick="switchTab('vote')">Vote</button>
-      <button class="mode-tab" onclick="switchTab('results')">Results</button>
+      <button class="mode-tab active" onclick="switchTab('create')" data-tab="create">Create Poll<span class="current-step">← You are here</span></button>
+      <button class="mode-tab" onclick="switchTab('vote')" data-tab="vote">Vote<span class="current-step" style="display: none;">← You are here</span></button>
+      <button class="mode-tab" onclick="switchTab('results')" data-tab="results">Results<span class="current-step" style="display: none;">← You are here</span></button>
     </div>
     
     <!-- Create Poll Tab -->
     <div id="createTab" class="tab-content active">
+      <div class="workflow-guide">
+        <div class="workflow-title">How it works</div>
+        <div class="workflow-steps">
+          <div class="workflow-step">
+            <span class="icon">✏️</span>
+            <span>Step 1: Create your question</span>
+          </div>
+          <span class="workflow-arrow">→</span>
+          <div class="workflow-step">
+            <span class="icon">🗳️</span>
+            <span>Step 2: Students vote</span>
+          </div>
+          <span class="workflow-arrow">→</span>
+          <div class="workflow-step">
+            <span class="icon">📊</span>
+            <span>Step 3: View results</span>
+          </div>
+        </div>
+      </div>
       <div class="setup-section">
         <label for="pollQuestion">Question:</label>
         <input type="text" id="pollQuestion" placeholder="e.g., What is the capital of France?">
@@ -279,6 +393,9 @@
     
     <!-- Vote Tab -->
     <div id="voteTab" class="tab-content">
+      <div id="pollConfirmation" class="poll-confirmation">
+        ✅ Poll created! Now students can vote.
+      </div>
       <div id="voteSection" style="display: none;">
         <div class="poll-question" id="votingQuestion"></div>
         <div class="voting-options" id="votingOptions"></div>
@@ -328,15 +445,32 @@
     let hasVoted = false;
     
     function switchTab(tab) {
-      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        t.classList.remove('active');
+        t.classList.remove('highlight');
+        t.querySelector('.current-step').style.display = 'none';
+      });
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       
-      event.target.classList.add('active');
+      const activeTab = document.querySelector(`button[data-tab="${tab}"]`);
+      activeTab.classList.add('active');
+      activeTab.querySelector('.current-step').style.display = 'inline';
       document.getElementById(tab + 'Tab').classList.add('active');
+      
+      // Hide confirmation when leaving vote tab
+      if (tab !== 'vote') {
+        document.getElementById('pollConfirmation').classList.remove('show');
+      }
       
       if (tab === 'results') {
         updateResults();
       }
+    }
+    
+    function highlightVoteTab() {
+      const voteTab = document.querySelector('button[data-tab="vote"]');
+      voteTab.classList.add('highlight');
+      setTimeout(() => voteTab.classList.remove('highlight'), 2000);
     }
     
     function setPreset(type) {
@@ -416,8 +550,10 @@
       document.getElementById('noActivePoll').style.display = 'none';
       document.getElementById('teacherControls').style.display = 'block';
       
-      // Switch to vote tab
-      document.querySelectorAll('.mode-tab')[1].click();
+      // Switch to vote tab with visual feedback
+      switchTab('vote');
+      document.getElementById('pollConfirmation').classList.add('show');
+      highlightVoteTab();
       
       // Save to localStorage
       localStorage.setItem('activePoll', JSON.stringify(pollData));
